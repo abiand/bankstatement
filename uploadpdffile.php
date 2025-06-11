@@ -334,11 +334,10 @@ $stmt->close();
                 if (count($header_ids) > 0) {
                     $id_list = implode(',', array_map('intval', $header_ids));
                     $connect->query("DELETE FROM bs_detail WHERE header_id IN ($id_list)");
+
+                    $connect->query("DELETE FROM bs_header WHERE id IN ($id_list)");
                 }
-                $connect->query("
-                    DELETE FROM bs_header
-                    WHERE id IN ($id_list)
-                ");
+
 
 
                 $sqlInsertHeader = "INSERT INTO bs_header(
