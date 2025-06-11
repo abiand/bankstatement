@@ -1,0 +1,19 @@
+{
+    "name": "bhp/ocrbankstatement",
+    "description": "bank statement",
+    "type": "project",
+    "autoload": {
+        "psr-4": {
+            "Bhp\\Ocrbankstatement\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "adam"
+        }
+    ],
+    "require": {
+        "guzzlehttp/guzzle": "^7.9",
+        "phpoffice/phpspreadsheet": "^3.7"
+    }
+}
