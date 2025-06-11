@@ -26,7 +26,7 @@ if ($result && $row = $result->fetch_assoc()) {
 // Close the statement
 $stmt->close();
 
-            $json_data = file_get_contents('mandiri2.json');   
+            $json_data = file_get_contents('bca.json');   
             $jsonArrayResponse = json_decode($json_data, true);
 
 
@@ -370,7 +370,8 @@ $stmt->close();
                                         "Saldo" => "0",
                                         "Posting_Date" => "",
                                         "Desc" => "",
-                                        "Debit_Kredit" => "0"
+                                        "Debit_Kredit" => "0",
+                                        "Kredit" => "0"
                                     ];
         
                                 }
@@ -384,7 +385,7 @@ $stmt->close();
                                 }
         
                                 foreach ($dataDetails as $values) {
- 
+                                 //   echo json_encode($values, JSON_PRETTY_PRINT) . "\n";
                                     if ($Norek == "1150094006345"){//MANDIRI
                                         
                                         $RemarkRaw 		= str_replace("'", "", $values['Remark']);
@@ -432,18 +433,28 @@ $stmt->close();
                                   /*
                                         $Debit 			= str_replace([',', '.'], '', $values['Debit_Kredit']);
                                         $Kredit 		= str_replace([',', '.'], '', $values['Debit_Kredit']); */
-                                        if(substr($values['Debit_Kredit'], -2)=="DB" || $Debit=="0"){  
+                                      //  echo $page_no." -->> ".$values['Debit_Kredit']." - - ".$values['Kredit']."<br/>";
+
+                                      $rawValue = '';
+                                      if (!empty($values['Debit_Kredit']) && $values['Debit_Kredit'] != "0") {
+                                          $rawValue = $values['Debit_Kredit'];
+                                      } elseif (!empty($values['Kredit']) && $values['Kredit'] != "0") {
+                                          $rawValue = $values['Kredit'];
+                                      }
+
+                                      $AmountBCA = $rawValue;
+
+                                        if(substr($AmountBCA, -2)=="DB"){  
                                             //$Debit 			= preg_replace('/[a-zA-Z]/','',str_replace([',', '.'], '', $values['Debit_Kredit']));
-											$DebitBCA 	= preg_replace('/[A-Za-z\s]+$/', '', $values['Debit_Kredit']);
+											$DebitBCA 	= preg_replace('/[A-Za-z\s]+$/', '', $AmountBCA);
 											$Debit          = normalizeAmount($DebitBCA, 'us');  
 											//echo $Debit;
                                             $Kredit 	= "0";
                                             
                                             $codetransaction = "DB";
                                         }else{ 
-                                           // $Kredit 		= preg_replace('/[a-zA-Z]/','',str_replace([',', '.'], '', $values['Debit_Kredit']));
-                                           // $Kredit 	= preg_replace('/[A-Za-z\s]+$/', '', $values['Debit_Kredit']);
-											$KreditBCA 		= preg_replace('/[A-Za-z\s]+$/', '', $values['Debit_Kredit']);
+                                   
+											$KreditBCA 		= preg_replace('/[A-Za-z\s]+$/', '', $AmountBCA);
 											$Kredit          = normalizeAmount($KreditBCA, 'us');  
                                             $Debit 	= "0";
                                             $codetransaction = "CR";

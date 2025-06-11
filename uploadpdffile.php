@@ -456,7 +456,8 @@ $stmt->close();
                                         "Saldo" => "0",
                                         "Posting_Date" => "",
                                         "Desc" => "",
-                                        "Debit_Kredit" => "0"
+                                        "Debit_Kredit" => "0",
+                                        "Kredit" => "0"
                                     ];
         
                                 }
@@ -512,15 +513,27 @@ $stmt->close();
 										$Remark = preg_replace("/[^a-zA-Z0-9\s.,-]/", "", $RemarkRaw);
                                        // $Debit 			= str_replace([',', '.'], '', $values['Debit_Kredit']);
                                         //$Kredit 		= str_replace([',', '.'], '', $values['Debit_Kredit']);
-                                          if(substr($values['Debit_Kredit'], -2)=="DB" || $values['Debit_Kredit']=="0"){  
-											$DebitBCA 	= preg_replace('/[A-Za-z\s]+$/', '', $values['Debit_Kredit']);
+
+                                        $rawValue = '';
+                                        if (!empty($values['Debit_Kredit']) && $values['Debit_Kredit'] != "0") {
+                                            $rawValue = $values['Debit_Kredit'];
+                                        } elseif (!empty($values['Kredit']) && $values['Kredit'] != "0") {
+                                            $rawValue = $values['Kredit'];
+                                        }
+  
+                                        $AmountBCA = $rawValue;
+
+                                        if(substr($AmountBCA, -2)=="DB"){  
+                                            //$Debit 			= preg_replace('/[a-zA-Z]/','',str_replace([',', '.'], '', $values['Debit_Kredit']));
+											$DebitBCA 	= preg_replace('/[A-Za-z\s]+$/', '', $AmountBCA);
 											$Debit          = normalizeAmount($DebitBCA, 'us');  
+											//echo $Debit;
                                             $Kredit 	= "0";
                                             
                                             $codetransaction = "DB";
                                         }else{ 
-                                            //$Kredit 		= preg_replace('/[a-zA-Z]/','',str_replace([',', '.'], '', $values['Debit_Kredit']));
-                                            $KreditBCA 		= preg_replace('/[A-Za-z\s]+$/', '', $values['Debit_Kredit']);
+                                   
+											$KreditBCA 		= preg_replace('/[A-Za-z\s]+$/', '', $AmountBCA);
 											$Kredit          = normalizeAmount($KreditBCA, 'us');  
                                             $Debit 	= "0";
                                             $codetransaction = "CR";

@@ -102,7 +102,6 @@ while($rowHead = $result->fetch_assoc()) {
             $sheet->getStyle('A8')->getFont()->setBold(true);
 
             $sheet->setCellValue('A9', 'DATE');
-           // $sheet->setCellValue('B9', 'REFF');
             $sheet->setCellValue('B9', 'DESCRIPTIONS');
             $sheet->setCellValue('C9', 'Rp.');
             $sheet->getStyle('A9:C9')->getFont()->setBold(true);
