@@ -519,6 +519,8 @@ $stmt->close();
                                             $rawValue = $values['Debit_Kredit'];
                                         } elseif (!empty($values['Kredit']) && $values['Kredit'] != "0") {
                                             $rawValue = $values['Kredit'];
+                                        } elseif (!empty($values['Saldo']) && $values['Saldo'] != "0") {
+                                            $rawValue = $values['Saldo'];
                                         }
   
                                         $AmountBCA = $rawValue;

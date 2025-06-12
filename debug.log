@@ -367,3 +367,44 @@
         AND d.GLFY = 25 
     WHERE 
         d.GLAA IS NULL
+
+        SELECT 
+        c.id, 
+        c.fiscal, 
+        c.period, 
+        c.posting_date, 
+        c.code, 
+        c.remark, 
+        REPLACE(
+            REPLACE(
+                REPLACE(FORMAT(c.amount_debit / 100, 2), ',', 'X'), 
+            '.', ','), 
+        'X', '.') AS amount_debit, 
+        c.amount_debit / 100 AS forsum 
+    FROM (
+        SELECT 
+            a.id, 
+            a.fiscal, 
+            a.period, 
+            b.posting_date, 
+            b.code, 
+            b.remark, 
+            b.amount_kredit, 
+            b.amount_debit 
+        FROM 
+            bs_header a 
+            INNER JOIN bs_detail b ON a.id = b.header_id 
+        WHERE 
+            b.code = 'DB' 
+            AND a.fiscal = 25 
+            AND a.period <= 5 
+            AND a.account_number = '1.11501.BCA01IDR' 
+            AND a.user_id = '5576'
+    ) c 
+    LEFT JOIN bankgl d 
+        ON CONCAT('-', CAST(ROUND(c.amount_debit * 100) AS CHAR)) = d.GLAA 
+        AND d.GLAID = '00000311' 
+        AND d.GLPN <= 5 
+        AND d.GLFY = 25 
+    WHERE 
+        d.GLAA IS NULL

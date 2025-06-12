@@ -26,7 +26,7 @@ if ($result && $row = $result->fetch_assoc()) {
 // Close the statement
 $stmt->close();
 
-            $json_data = file_get_contents('bca.json');   
+            $json_data = file_get_contents('bca5.json');   
             $jsonArrayResponse = json_decode($json_data, true);
 
 
@@ -385,7 +385,7 @@ $stmt->close();
                                 }
         
                                 foreach ($dataDetails as $values) {
-                                 //   echo json_encode($values, JSON_PRETTY_PRINT) . "\n";
+                                   // echo json_encode($values, JSON_PRETTY_PRINT) . "\n";
                                     if ($Norek == "1150094006345"){//MANDIRI
                                         
                                         $RemarkRaw 		= str_replace("'", "", $values['Remark']);
@@ -435,12 +435,14 @@ $stmt->close();
                                         $Kredit 		= str_replace([',', '.'], '', $values['Debit_Kredit']); */
                                       //  echo $page_no." -->> ".$values['Debit_Kredit']." - - ".$values['Kredit']."<br/>";
 
-                                      $rawValue = '';
-                                      if (!empty($values['Debit_Kredit']) && $values['Debit_Kredit'] != "0") {
+                                         $rawValue = '';
+                                        if (!empty($values['Debit_Kredit']) && $values['Debit_Kredit'] != "0") {
                                           $rawValue = $values['Debit_Kredit'];
-                                      } elseif (!empty($values['Kredit']) && $values['Kredit'] != "0") {
+                                        } elseif (!empty($values['Kredit']) && $values['Kredit'] != "0") {
                                           $rawValue = $values['Kredit'];
-                                      }
+                                        } elseif (!empty($values['Saldo']) && $values['Saldo'] != "0") {
+                                            $rawValue = $values['Saldo'];
+                                        }
 
                                       $AmountBCA = $rawValue;
 
