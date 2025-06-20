@@ -105,7 +105,7 @@ function generateQueryGL($glaid, $twoDigitYear, $nMonth) {
     }
     
     $sql = "SELECT SUM(GBAPYC) + " . implode(' + ', $result) . " AS TOTAL FROM balance WHERE GBAID = ? AND GBFY = ? AND GBLT = 'AA'";
-    
+  //  file_put_contents('debug.log', $sql . PHP_EOL, FILE_APPEND);
     $stmt = $connect->prepare($sql);
     
     if ($stmt) {
@@ -123,4 +123,4 @@ function generateQueryGL($glaid, $twoDigitYear, $nMonth) {
     $connect->close();
 }
 
-generateQueryGL("00000315",24,7);
+// echo generateQueryGL("00000317",25,6);

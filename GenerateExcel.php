@@ -1,7 +1,7 @@
 <?php
 
 require 'vendor/autoload.php';
-
+include 'generateQueryGL.php';
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -31,6 +31,11 @@ if (isset($_GET['id'])) {
 $sql = "select id, bank_name, bank_account, fiscal, period, REPLACE(REPLACE(REPLACE(FORMAT(beginning_balance / 100, 2), ',', 'X'),'.', ','),'X', '.') AS  beginning_balance, account_number from bs_header a where is_generated = 0 and id=".$idas_value;
 
 
+
+
+
+
+
 $result = $connect->query($sql);
 while($rowHead = $result->fetch_assoc()) {
    // echo "<br> id: ". $row["id"]. " - bank_name: ". $row["bank_name"]. " " . $row["bank_account"] . " " . $row["fiscal"] . " " . $row["period"] . " " . $row["balance_amount"] . "<br>";
@@ -44,6 +49,8 @@ while($rowHead = $result->fetch_assoc()) {
         $AccountID = "00000311"; 
     } 
    
+    $beginning_balance = generateQueryGL($AccountID,$rowHead["fiscal"],$rowHead["period"]);
+
             // Create a DateTime object for the first day of the next month
             $date = new DateTime("{$rowHead["fiscal"]}-{$rowHead["period"]}-01");
             $date->modify('first day of next month');
@@ -94,7 +101,9 @@ while($rowHead = $result->fetch_assoc()) {
             $sheet->getStyle('A6')->getFont()->setBold(true);
 
             $sheet->setCellValue('E6', 'Rp');
-            $sheet->setCellValue('F6',$rowHead["beginning_balance"] );
+            $begbalance = $beginning_balance / 100; 
+            $sheet->setCellValue('F6',$begbalance );
+            $sheet->getStyle('F6')->getNumberFormat()->setFormatCode('#,##0.00');
             $sheet->getStyle('F6')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
 
             // Section 1: PENERIMAAN YANG BELUM DICATAT ACCOUNTING
@@ -123,12 +132,8 @@ $sqlDetail1 = "
         c.posting_date, 
         c.code, 
         c.remark, 
-        REPLACE(
-            REPLACE(
-                REPLACE(FORMAT(amount_kredit / 100, 2), ',', 'X'),
-            '.', ','), 
-        'X', '.') AS amount_kredit, 
-        c.amount_kredit / 100 AS forsum  
+        c.amount_kredit,
+        c.amount_kredit AS forsum  
     FROM (
         SELECT 
             a.id, 
@@ -166,14 +171,18 @@ $sqlDetail1 = "
             foreach ($result1 as $data) {
                 $sheet->setCellValue('A' . $row, $data['posting_date']);
                 $sheet->setCellValue('B' . $row, $data['remark']);
-                $sheet->setCellValue('C' . $row, $data['amount_kredit']);
+                $amountSql1 = floatval(str_replace(',', '.', $data['amount_kredit']));
+                $sheet->setCellValue('C' . $row, $amountSql1);
+                $sheet->getStyle('C' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
                 //$sheet->getStyle('D' . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
                 $sum1 += $data['forsum'];
                 $row++;
             }
 
             $sheet->setCellValue('E'. $row, 'Rp');
-            $sheet->setCellValue('F'. $row, number_format($sum1, 0, ',', '.'));
+            $amountSum1 = floatval(str_replace(',', '.', $sum1));
+            $sheet->setCellValue('F'. $row, $amountSum1);
+            $sheet->getStyle('F' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
             $sheet->getStyle('F'. $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
 
 
@@ -206,12 +215,8 @@ $sqlDetail1 = "
         c.posting_date, 
         c.code, 
         c.remark, 
-        REPLACE(
-            REPLACE(
-                REPLACE(FORMAT(c.amount_debit / 100, 2), ',', 'X'), 
-            '.', ','), 
-        'X', '.') AS amount_debit, 
-        c.amount_debit / 100 AS forsum 
+        c.amount_debit,
+        c.amount_debit AS forsum 
     FROM (
         SELECT 
             a.id, 
@@ -233,7 +238,7 @@ $sqlDetail1 = "
             AND a.user_id = '" . $nik . "'
     ) c 
     LEFT JOIN bankgl d 
-        ON CONCAT('-', CAST(ROUND(c.amount_debit * 100) AS CHAR)) = d.GLAA 
+        ON ROUND(REPLACE(c.amount_debit, ',', '.') * -100) = d.GLAA
         AND d.GLAID = '" . $AccountID . "' 
         AND d.GLPN <= " . $rowHead["period"] . " 
         AND d.GLFY = " . $rowHead["fiscal"] . " 
@@ -242,20 +247,29 @@ $sqlDetail1 = "
 
 file_put_contents('debug.log', $sqlDetail2 . PHP_EOL, FILE_APPEND);
 				
+
+
+
                 $result2 = $connect->query($sqlDetail2);
                 $row++;
                 $sum2 = 0;
                 foreach ($result2 as $data) {
                     $sheet->setCellValue('A' . $row, $data['posting_date']);
                     $sheet->setCellValue('B' . $row, $data['remark']);
-                    $sheet->setCellValue('C' . $row, $data['amount_debit']);
-                   // $sheet->getStyle('D' . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+                    $amountSql2 = floatval(str_replace(',', '.', $data['amount_debit']));
+                    $sheet->setCellValue('C' . $row, $amountSql2);
+                    $sheet->getStyle('C' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
+                    //$sheet->setCellValue('C' . $row, $data['amount_debit']);
+                    // $sheet->getStyle('D' . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
                     $sum2 += $data['forsum'];
                     $row++;
                 }
 
                 $sheet->setCellValue('E'. $row, 'Rp');
-                $sheet->setCellValue('F'. $row, number_format($sum2, 0, ',', '.'));
+                $amountSum2= floatval(str_replace(',', '.', $sum2));
+                $sheet->setCellValue('F'. $row, $amountSum2);
+                $sheet->getStyle('F' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
+               // $sheet->setCellValue('F'. $row, number_format($sum2, 0, ',', '.'));
                 $sheet->getStyle('F'. $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
 
             // Section 3: PENGELUARAN YANG BELUM DICATAT BANK
@@ -292,12 +306,8 @@ $sqlDetail3 = "
         GLEXR, 
         GLPN, 
         GLFY, 
-        REPLACE(
-            REPLACE(
-                REPLACE(FORMAT(GLAA / 100, 2), ',', 'X'), 
-            '.', ','), 
-        'X', '.') AS amount_debit, 
-        GLAA / 100 AS forsum 
+        GLAA as amount_debit, 
+        GLAA AS forsum 
     FROM 
         bankgl b 
     WHERE 
@@ -307,7 +317,7 @@ $sqlDetail3 = "
         AND b.GLAA < 0 
         AND b.GLAA NOT IN (
             SELECT 
-                -ABS(ROUND(b.amount_debit*100)) 
+                ROUND(REPLACE(b.amount_debit, ',', '.') * -100) 
             FROM 
                 bs_header a 
                 INNER JOIN bs_detail b ON a.id = b.header_id 
@@ -327,7 +337,13 @@ $sqlDetail3 = "
                 while ($datas = $result3->fetch_assoc()) {  
                     $sheet->setCellValue('A' . $row, $datas['posting_date']);
                     $sheet->setCellValue('B' . $row, $datas['remark']);
-                    $sheet->setCellValue('C' . $row, $datas['amount_debit']);
+
+                    $amount_debit3 = $datas['amount_debit'] / 100; 
+           // $sheet->setCellValue('F6',$begbalance );
+           
+                    
+                    $sheet->setCellValue('C' . $row, $amount_debit3);
+                    $sheet->getStyle('F' .$row)->getNumberFormat()->setFormatCode('#,##0.00');
                     //$sheet->getStyle('D' . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
                     $sum3 += $datas['forsum'];
                     $row++;
@@ -366,12 +382,8 @@ $sqlDetail4 = "
         GLEXR, 
         GLPN, 
         GLFY, 
-        REPLACE(
-            REPLACE(
-                REPLACE(FORMAT(GLAA / 100, 2), ',', 'X'), 
-            '.', ','), 
-        'X', '.') AS amount_kredit, 
-        GLAA / 100 AS forsum 
+        GLAA as amount_kredit, 
+        GLAA as forsum 
     FROM 
         bankgl b 
     WHERE 
@@ -430,7 +442,7 @@ $sqlDetail4 = "
             $sheet->getStyle('A' . $row)->getFont()->setBold(true);
 
             $sheet->setCellValue('E'. $row, 'Rp');
-            $sheet->setCellValue('F'. $row, number_format($rowHead["beginning_balance"]+$sum1+$sum2+$sum3+$sum4, 0, ',', '.'));
+            $sheet->setCellValue('F'. $row, number_format($beginning_balance+$sum1+$sum2+$sum3+$sum4, 0, ',', '.'));
             $sheet->getStyle('F'. $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
 
 
